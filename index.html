@@ -1,1 +1,293 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b0d12"><title>金銀ETF 乖離モニター</title><style>body{font-family:-apple-system,sans-serif;background:#0b0d12;color:#fff;margin:0;padding:20px}.w{max-width:720px;margin:auto}.c{background:#151923;border:1px solid #293140;border-radius:20px;padding:20px;margin:15px 0}.r{display:flex;justify-content:space-between;align-items:center}.p{font-size:42px;font-weight:800}.m{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}.b,.st{background:#10141c;border-radius:12px;padding:12px}.l{font-size:12px;color:#8993a4}.v{font-size:18px;margin-top:5px}.st{color:#aab4c3;font-size:13px;white-space:pre-line}button{width:100%;padding:14px;border:0;border-radius:14px;font-size:16px;font-weight:700}.n{font-size:11px;color:#7f8a9c;line-height:1.5;margin-top:14px}.pos{color:#ff5a52}.neg{color:#5ac8fa}</style></head><body><div class="w"><h1>金銀ETF 乖離モニター</h1><div id="st" class="st">データ取得待ち…</div><div class="c"><div class="r"><b>🥇 純金上場信託 1540</b><span id="pg" class="p">--%</span></div><div class="m"><div class="b"><div class="l">ETF価格</div><div id="eg" class="v">--</div></div><div class="b"><div class="l">推定理論価値</div><div id="fg" class="v">--</div></div></div></div><div class="c"><div class="r"><b>🥈 純銀上場信託 1542</b><span id="ps" class="p">--%</span></div><div class="m"><div class="b"><div class="l">ETF価格</div><div id="es" class="v">--</div></div><div class="b"><div class="l">推定理論価値</div><div id="fs" class="v">--</div></div></div></div><button onclick="go()">今すぐ更新</button><div class="n">※公式iNAVではなく、ETF価格・金銀USD価格・USD/JPYから算出する取引中の推定値です。無料公開データの取得制限時は更新できません。</div></div><script>const O=31.1034768,G=.9336991,S=91.3275196;async function q(x){let t='https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(x)+'?interval=1m&range=1d',u=['https://api.allorigins.win/raw?url='+encodeURIComponent(t),'https://corsproxy.io/?url='+encodeURIComponent(t),t],e;for(const z of u){try{let r=await fetch(z,{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);let j=await r.json(),a=j?.chart?.result?.[0],p=a?.meta?.regularMarketPrice??a?.meta?.previousClose;if(p!=null)return Number(p)}catch(x){e=x}}throw e||Error('取得失敗')}async function go(){st.textContent='更新中…';try{let[a,b,c,d,e]=await Promise.all([q('1540.T'),q('1542.T'),q('GC=F'),q('SI=F'),q('JPY=X')]),f=c*e/O*G,h=d*e/O*S,x=(a/f-1)*100,y=(b/h-1)*100;eg.textContent=Math.round(a).toLocaleString()+' 円';es.textContent=Math.round(b).toLocaleString()+' 円';fg.textContent=Math.round(f).toLocaleString()+' 円';fs.textContent=Math.round(h).toLocaleString()+' 円';pg.textContent=(x>=0?'+':'')+x.toFixed(2)+'%';ps.textContent=(y>=0?'+':'')+y.toFixed(2)+'%';pg.className='p '+(x>=0?'pos':'neg');ps.className='p '+(y>=0?'pos':'neg');st.textContent='✅ 最終更新 '+new Date().toLocaleTimeString('ja-JP')+'\n15秒ごとに自動更新中'}catch(e){st.textContent='❌ 価格データを取得できません\n'+e.message}}go();setInterval(go,15000)</script></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<title>金銀ETF 乖離モニター</title>
+
+<style>
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:#0b0d12;
+  color:#fff;
+  margin:0;
+  padding:20px;
+}
+.wrap{max-width:720px;margin:auto}
+h1{font-size:24px;margin:12px 0 6px}
+
+.status{
+  background:#10141c;
+  color:#aab4c3;
+  padding:12px;
+  border-radius:12px;
+  font-size:13px;
+  white-space:pre-line;
+  margin-bottom:15px;
+}
+
+.card{
+  background:#151923;
+  border:1px solid #293140;
+  border-radius:20px;
+  padding:20px;
+  margin:15px 0;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.name{
+  font-size:18px;
+  font-weight:750;
+}
+
+.premium{
+  font-size:42px;
+  font-weight:850;
+}
+
+.meta{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:16px;
+}
+
+.box{
+  background:#10141c;
+  border-radius:12px;
+  padding:12px;
+}
+
+.label{
+  color:#8993a4;
+  font-size:12px;
+}
+
+.value{
+  margin-top:5px;
+  font-size:18px;
+  font-weight:650;
+}
+
+.pos{color:#ff5a52}
+.neg{color:#5ac8fa}
+
+button{
+  width:100%;
+  padding:14px;
+  border:0;
+  border-radius:14px;
+  font-size:16px;
+  font-weight:750;
+  margin-top:8px;
+}
+
+.note{
+  color:#7f8a9c;
+  font-size:11px;
+  line-height:1.55;
+  margin-top:15px;
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<h1>金銀ETF 乖離モニター</h1>
+
+<div id="status" class="status">
+データ取得中…
+</div>
+
+<div class="card">
+  <div class="row">
+    <div class="name">🥇 純金上場信託 1540</div>
+    <div id="goldPremium" class="premium">--%</div>
+  </div>
+
+  <div class="meta">
+    <div class="box">
+      <div class="label">ETF価格</div>
+      <div id="goldETF" class="value">--</div>
+    </div>
+
+    <div class="box">
+      <div class="label">推定理論価値</div>
+      <div id="goldFair" class="value">--</div>
+    </div>
+  </div>
+</div>
+
+
+<div class="card">
+  <div class="row">
+    <div class="name">🥈 純銀上場信託 1542</div>
+    <div id="silverPremium" class="premium">--%</div>
+  </div>
+
+  <div class="meta">
+    <div class="box">
+      <div class="label">ETF価格</div>
+      <div id="silverETF" class="value">--</div>
+    </div>
+
+    <div class="box">
+      <div class="label">推定理論価値</div>
+      <div id="silverFair" class="value">--</div>
+    </div>
+  </div>
+</div>
+
+<button onclick="updateData()">今すぐ更新</button>
+
+<div class="note">
+15秒ごとに自動更新。<br>
+※公式iNAVではなく、1540・1542、金・銀、USD/JPYから算出した推定乖離率です。<br>
+※元データ自体に遅延がある場合があります。
+</div>
+
+</div>
+
+<script>
+
+const API =
+"https://gold-silver-etf-api.8mm7tpmnd7.workers.dev";
+
+function yen(x){
+  return Math.round(x).toLocaleString("ja-JP") + " 円";
+}
+
+function pct(x){
+  return (x >= 0 ? "+" : "") + x.toFixed(2) + "%";
+}
+
+function paint(el,x){
+  el.className =
+    "premium " + (x >= 0 ? "pos" : "neg");
+}
+
+function japanTime(iso){
+  return new Date(iso).toLocaleTimeString(
+    "ja-JP",
+    {
+      hour:"2-digit",
+      minute:"2-digit",
+      second:"2-digit"
+    }
+  );
+}
+
+async function updateData(){
+
+  const status =
+    document.getElementById("status");
+
+  status.textContent = "更新中…";
+
+  try{
+
+    const response =
+      await fetch(
+        API + "?t=" + Date.now(),
+        {cache:"no-store"}
+      );
+
+    if(!response.ok){
+      throw new Error(
+        "API HTTP " + response.status
+      );
+    }
+
+    const data = await response.json();
+
+    if(!data.ok){
+      throw new Error(
+        data.error || "APIエラー"
+      );
+    }
+
+
+    document.getElementById(
+      "goldETF"
+    ).textContent =
+      yen(data.gold.etfPrice);
+
+    document.getElementById(
+      "goldFair"
+    ).textContent =
+      yen(data.gold.fairValue);
+
+    const gp =
+      document.getElementById(
+        "goldPremium"
+      );
+
+    gp.textContent =
+      pct(data.gold.premiumPct);
+
+    paint(
+      gp,
+      data.gold.premiumPct
+    );
+
+
+    document.getElementById(
+      "silverETF"
+    ).textContent =
+      yen(data.silver.etfPrice);
+
+    document.getElementById(
+      "silverFair"
+    ).textContent =
+      yen(data.silver.fairValue);
+
+    const sp =
+      document.getElementById(
+        "silverPremium"
+      );
+
+    sp.textContent =
+      pct(data.silver.premiumPct);
+
+    paint(
+      sp,
+      data.silver.premiumPct
+    );
+
+
+    status.textContent =
+      "✅ API取得成功\n" +
+      "最終更新 " +
+      japanTime(data.fetchedAt) +
+      " ｜ 15秒ごと自動更新";
+
+  }
+
+  catch(error){
+
+    status.textContent =
+      "❌ データ取得失敗\n" +
+      error.message;
+
+  }
+}
+
+updateData();
+
+setInterval(
+  updateData,
+  15000
+);
+
+</script>
+
+</body>
+</html>
