@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<title>金銀ETF 乖離モニター</title>
+<style>
+body{margin:0;padding:20px;background:#0b0d12;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:760px;margin:auto}h1{font-size:25px}.sub,.small{color:#8f99aa;font-size:12px}
+.status,.info{background:#10141c;border:1px solid #232a36;border-radius:14px;padding:12px 14px;margin:12px 0;color:#aab4c3;font-size:13px;line-height:1.55;white-space:pre-line}
+.card{background:#151923;border:1px solid #2a3342;border-radius:20px;padding:19px;margin:15px 0}.row{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.name{font-size:20px;font-weight:800}.code{font-size:13px;color:#8f99aa}.premium{font-size:43px;font-weight:900}.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.box,.kv{background:#0f131b;border-radius:13px;padding:12px}.lab,.k{color:#8993a4;font-size:12px}.val,.v2{font-size:18px;font-weight:700;margin-top:4px}
+.pos{color:#ff5a52}.neg{color:#5ac8fa}.neutral{color:#fff}.warn{color:#ffd60a}.ok{color:#53d769}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}button{width:100%;padding:14px;border:0;border-radius:14px;background:#fff;font-size:16px;font-weight:800}
+.small{font-size:11px;line-height:1.6;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>金銀ETF 乖離モニター</h1>
+<div class="sub">1540 / 1542｜MUFG公式NAV基準のリアルタイム推定｜15秒更新</div>
+<div id="status" class="status">データ取得中…</div>
+
+<div class="card"><div class="row"><div><div class="name">🥇 純金上場信託</div><div class="code">1540</div></div><div id="goldPremium" class="premium neutral">--%</div></div><div class="meta"><div class="box"><div class="lab">ETF価格</div><div id="goldETF" class="val">--</div></div><div class="box"><div class="lab">推定NAV</div><div id="goldFair" class="val">--</div></div></div></div>
+
+<div class="card"><div class="row"><div><div class="name">🥈 純銀上場信託</div><div class="code">1542</div></div><div id="silverPremium" class="premium neutral">--%</div></div><div class="meta"><div class="box"><div class="lab">ETF価格</div><div id="silverETF" class="val">--</div></div><div class="box"><div class="lab">推定NAV</div><div id="silverFair" class="val">--</div></div></div></div>
+
+<div class="info"><strong>基準データ</strong><div class="grid">
+<div class="kv"><div class="k">公式NAV基準日</div><div id="officialDate" class="v2">--</div></div>
+<div class="kv"><div class="k">公式データ取得元</div><div id="officialSource" class="v2">--</div></div>
+<div class="kv"><div class="k">ETF価格時刻</div><div id="etfTime" class="v2">--</div></div>
+<div class="kv"><div class="k">推定値更新時刻</div><div id="fetchTime" class="v2">--</div></div>
+</div><div id="marketNote" style="margin-top:10px"></div></div>
+
+<button onclick="updateData()">今すぐ更新</button>
+<div class="small">
+15秒ごとに自動更新します。<br>
+この乖離率は、三菱UFJ信託銀行が公表する公式NAVを基準点とし、その後の金・銀価格およびUSD/JPYの変動を反映して推定した値です。公式NAVそのものではありません。<br>
+ETF価格や元データには配信遅延が生じる場合があります。取引時間外はETF価格が止まったまま金銀・為替だけが動くため、表示乖離率は「次の取引可能価格」を示すものではありません。
+</div>
+</div>
+<script>
+const API="https://gold-silver-etf-api.8mm7tpmnd7.workers.dev";
+const yen=x=>Math.round(x).toLocaleString("ja-JP")+" 円";
+const pct=x=>(x>=0?"+":"")+x.toFixed(2)+"%";
+function paint(el,x){el.className="premium "+(x>0?"pos":x<0?"neg":"neutral")}
+function jstIso(iso){return iso?new Date(iso).toLocaleString("ja-JP",{timeZone:"Asia/Tokyo",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit"}):"--"}
+function jstUnix(sec){return sec?new Date(sec*1000).toLocaleString("ja-JP",{timeZone:"Asia/Tokyo",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit"}):"--"}
+function timeOnly(iso){return iso?new Date(iso).toLocaleTimeString("ja-JP",{timeZone:"Asia/Tokyo",hour:"2-digit",minute:"2-digit",second:"2-digit"}):"--"}
+function sessionText(){const now=new Date();const p=new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Tokyo",weekday:"short",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(now);const g=t=>p.find(x=>x.type===t)?.value;const wd=g("weekday"),mins=Number(g("hour"))*60+Number(g("minute"));const weekday=!["Sat","Sun"].includes(wd);const open=weekday&&((mins>=540&&mins<690)||(mins>=750&&mins<=930));return open?"🟢 東証の通常取引時間帯です（祝日等は別途休場の場合があります）。":"⚠️ 東証の通常取引時間外です。ETF価格が固定されたまま金銀・為替だけ動く場合があります。"}
+async function updateData(){
+ const status=document.getElementById("status");status.textContent="更新中…";
+ try{
+  const r=await fetch(API+"?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error("API HTTP "+r.status);
+  const d=await r.json();if(!d.ok)throw new Error(d.error||"APIエラー");
+  goldETF.textContent=yen(d.gold.etfPrice);goldFair.textContent=yen(d.gold.fairValue);goldPremium.textContent=pct(d.gold.premiumPct);paint(goldPremium,d.gold.premiumPct);
+  silverETF.textContent=yen(d.silver.etfPrice);silverFair.textContent=yen(d.silver.fairValue);silverPremium.textContent=pct(d.silver.premiumPct);paint(silverPremium,d.silver.premiumPct);
+  officialDate.textContent=d.official?.date||"--";officialSource.textContent=d.official?.source==="MUFG official"?"MUFG公式":"フォールバック";officialSource.className="v2 "+(d.official?.source==="MUFG official"?"ok":"warn");
+  etfTime.textContent="金 "+jstUnix(d.gold?.marketTime)+" / 銀 "+jstUnix(d.silver?.marketTime);fetchTime.textContent=jstIso(d.fetchedAt);marketNote.textContent=sessionText();
+  const fallback=d.official?.source!=="MUFG official";status.textContent=(fallback?"⚠️ 公式データ取得失敗・代替基準で計算":"✅ API取得成功・MUFG公式NAV基準")+"\n最終更新 "+timeOnly(d.fetchedAt)+" ｜ 15秒ごと自動更新";
+ }catch(e){status.textContent="❌ データ取得失敗\n"+e.message+"\n古い数字を最新値として表示しないよう更新を停止しています。"}
+}
+updateData();setInterval(updateData,15000);
+</script>
+</body>
+</html>
